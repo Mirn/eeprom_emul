@@ -26,7 +26,7 @@ typedef struct Flash_operation {
 	uint32_t addr;
 	uint32_t size;
 	flash_module_handler_t callback;
-	bool (*worker)(struct Flash_operation *op);
+	bool (*worker)(const struct Flash_operation *op);
 } tFlash_operation;
 
 static tFlash_operation task;
@@ -53,7 +53,12 @@ static void task_queue_init()
 	task_pos_wr = 0;
 }
 
-static bool task_queue_add(bool (*worker)(tFlash_operation *op), uint32_t addr, uint8_t * data, uint32_t size, flash_module_handler_t cb)
+static bool task_queue_add(
+		bool (* const worker)(const tFlash_operation *op),
+		const uint32_t addr,
+		uint8_t * const data,
+		const uint32_t size,
+		const flash_module_handler_t cb)
 {
 	if (task_queue_count() >= QUEUE_LENGTH)
 		return false;
@@ -127,7 +132,7 @@ int flash_module_init(void)
 	}
 }
 
-static bool worker_read(tFlash_operation *op)
+static bool worker_read(const tFlash_operation *op)
 {
 	mem_read(op->addr, op->data, op->size);
 
@@ -136,21 +141,21 @@ static bool worker_read(tFlash_operation *op)
 	return true;
 }
 
-static bool worker_write(tFlash_operation *op)
+static bool worker_write(const tFlash_operation *op)
 {
 	mem_write_enable();
 	mem_write_raw(op->addr, op->data, op->size);
 	return true;
 }
 
-static bool worker_erase(tFlash_operation *op)
+static bool worker_erase(const tFlash_operation *op)
 {
 	mem_write_enable();
 	mem_sector_erase_raw(op->addr);
 	return true;
 }
 
-static bool worker_wait_prog(UNUSED tFlash_operation *op)
+static bool worker_wait_prog(const tFlash_operation *op)
 {
 	bool done = (mem_status() & MEM_STATUS_WRITE_PROGRESS) == 0;
 

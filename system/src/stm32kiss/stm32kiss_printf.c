@@ -27,7 +27,7 @@ const char src_ver_printf[] = __DATE__"\t"__TIME__"\t"__FILE__"\r";
 
 void PrintChar(char c);
 
-void printf_usart_init()
+void printf_usart_reinit()
 {
     RCC_APB2PeriphClockCmd (RCC_APB2Periph_USART1 | RCC_APB2Periph_GPIOA, ENABLE);
 
@@ -75,7 +75,7 @@ void PrintChar(char c)
 	if (printf_usart_inited == false)
 	{
 		printf_usart_inited = true;
-		printf_usart_init();
+		printf_usart_reinit();
 	};
 
     while(USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET);

@@ -8,21 +8,24 @@ C_SRCS += \
 ../src/hw.c \
 ../src/main.c \
 ../src/mem.c \
-../src/mem_cmd.c 
+../src/mem_cmd.c \
+../src/mem_tst.c 
 
 OBJS += \
 ./src/flash_module.o \
 ./src/hw.o \
 ./src/main.o \
 ./src/mem.o \
-./src/mem_cmd.o 
+./src/mem_cmd.o \
+./src/mem_tst.o 
 
 C_DEPS += \
 ./src/flash_module.d \
 ./src/hw.d \
 ./src/main.d \
 ./src/mem.d \
-./src/mem_cmd.d 
+./src/mem_cmd.d \
+./src/mem_tst.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

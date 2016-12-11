@@ -86,8 +86,6 @@ void PrintChar(char c);
 
 extern const char src_ver_printf[];
 
-extern bool flash_log_enabled;
-void log_flash_init();
-
+void printf_usart_reinit();
 
 #endif //#ifndef __STM32KISS_H__
