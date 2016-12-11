@@ -5,6 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../src/flash_module.c \
+../src/flash_vars.c \
 ../src/hw.c \
 ../src/main.c \
 ../src/mem.c \
@@ -13,6 +14,7 @@ C_SRCS += \
 
 OBJS += \
 ./src/flash_module.o \
+./src/flash_vars.o \
 ./src/hw.o \
 ./src/main.o \
 ./src/mem.o \
@@ -21,6 +23,7 @@ OBJS += \
 
 C_DEPS += \
 ./src/flash_module.d \
+./src/flash_vars.d \
 ./src/hw.d \
 ./src/main.d \
 ./src/mem.d \

@@ -15,7 +15,7 @@ static uint8_t rd_buf[16] = {0};
 static uint8_t wr_buf_a[4] = {0x1F, 0x2F, 0x3F, 0x4F};
 static uint8_t wr_buf_b[4] = {0xFE, 0xFD, 0xFC, 0xFB};
 
-void rd_func(uint8_t *data, uint16_t size)
+static void rd_func(uint8_t *data, uint16_t size)
 {
 	for (uint32_t pos = 0; pos < size; pos++)
 		printf("%02X ", data[pos]);

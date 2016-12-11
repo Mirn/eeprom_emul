@@ -21,6 +21,9 @@
 //#define log(...)
 #define log(...) printf(__VA_ARGS__)
 
+//#define log_task(...)
+#define log_task(...) printf(__VA_ARGS__)
+
 typedef struct Flash_operation {
 	uint8_t *data;
 	uint32_t addr;
@@ -135,6 +138,7 @@ int flash_module_init(void)
 static bool worker_read(const tFlash_operation *op)
 {
 	mem_read(op->addr, op->data, op->size);
+	log_task("MEM_READ:\t0x%06X\t%04X\r\n", op->addr, op->size);
 
 	if (op->callback != NULL)
 		(*op->callback)(op->data, op->size);
@@ -145,6 +149,7 @@ static bool worker_write(const tFlash_operation *op)
 {
 	mem_write_enable();
 	mem_write_raw(op->addr, op->data, op->size);
+	log_task("MEM_WRITE:\t0x%06X\t%04X\r\n", op->addr, op->size);
 	return true;
 }
 
@@ -152,6 +157,7 @@ static bool worker_erase(const tFlash_operation *op)
 {
 	mem_write_enable();
 	mem_sector_erase_raw(op->addr);
+	log_task("MEM_ERASE:\t0x%06X\r\n", op->addr);
 	return true;
 }
 
