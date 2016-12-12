@@ -5,9 +5,17 @@
  *      Author: Евгений
  */
 
-#include "stm32kiss.h"
 #include "flash_module.h"
+#include "crc16_ccitt.h"
 #include "flash_vars.h"
+#include "stdio.h"
+
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wformat"    //for custom printf implementation which not support -lu and etc formats
+#define UNUSED __attribute__((unused))
+#else
+#error "Unknow compiler"
+#endif
 
 #define log(...) {}
 //#define log(...) printf(__VA_ARGS__)
@@ -50,27 +58,6 @@ static void state_write_check();
 static void state_newpage();
 
 static tState state_func = NULL;
-
-/*Name  : CRC-16 CCITT
-  Poly  : 0x1021    x^16 + x^12 + x^5 + 1
-  Init  : 0xFFFF
-  Revert: false
-  XorOut: 0x0000
-  Check : 0x29B1 ("123456789")
-  MaxLen: 4095 байт (32767 бит) - обнаружение одинарных, двойных, тройных и всех нечетных ошибок
-*/
-static uint16_t Crc16_CCITT(uint16_t crc, const uint8_t *pcBlock, size_t len)
-{
-    while (len--)
-    {
-        crc ^= *(pcBlock++) << 8;
-
-        uint32_t i;
-        for (i = 0; i < 8; i++)
-            crc = crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1;
-    }
-    return crc;
-}
 
 static void record_build(tRecord *rec, const uint32_t value, const uint8_t addr)
 {
@@ -228,9 +215,9 @@ void flash_vars_init(bool first_start)
 		init_error = false;
 
 		state_func = state_write_check;
-		//flash_module_erase(FLASH_VARS_PAGE_0_SEC_NUM);
-		//flash_module_erase(FLASH_VARS_PAGE_1_SEC_NUM);
-		//flash_module_erase(FLASH_VARS_PAGE_2_SEC_NUM);
+		flash_module_erase(FLASH_VARS_PAGE_0_SEC_NUM);
+		flash_module_erase(FLASH_VARS_PAGE_1_SEC_NUM);
+		flash_module_erase(FLASH_VARS_PAGE_2_SEC_NUM);
 	}
 }
 

@@ -18,10 +18,10 @@
 #define FLASH_MEM_WRITE_MAX 1024
 #define QUEUE_LENGTH 32
 
-//#define log(...)
+//#define log(...) {}
 #define log(...) printf(__VA_ARGS__)
 
-//#define log_task(...)
+//#define log_task(...) {}
 #define log_task(...) printf(__VA_ARGS__)
 
 typedef struct Flash_operation {
