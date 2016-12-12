@@ -21,8 +21,11 @@
 #error "Unknow compiler"
 #endif
 
-//#define log(...) {}
-#define log(...) printf(__VA_ARGS__);
+#define log(...) {}
+//#define log(...) printf(__VA_ARGS__);
+
+//#define log_init(...) {}
+#define log_init(...) printf(__VA_ARGS__);
 
 typedef struct {
 	uint32_t value;
@@ -51,12 +54,24 @@ static uint32_t page_index = 0;
 static const uint32_t pages_addr_tbl[FLASH_VARS_PAGES_COUNT] = {
 		FLASH_VARS_PAGE_0_ADDR,
 		FLASH_VARS_PAGE_1_ADDR,
-		FLASH_VARS_PAGE_2_ADDR
+		FLASH_VARS_PAGE_2_ADDR,
+#if (FLASH_VARS_PAGES_COUNT > 3)
+		FLASH_VARS_PAGE_3_ADDR,
+#if (FLASH_VARS_PAGES_COUNT > 4)
+		FLASH_VARS_PAGE_4_ADDR,
+#endif
+#endif
 };
 static const uint32_t pages_sectors_tbl[FLASH_VARS_PAGES_COUNT] = {
 		FLASH_VARS_PAGE_0_SEC_NUM,
 		FLASH_VARS_PAGE_1_SEC_NUM,
-		FLASH_VARS_PAGE_2_SEC_NUM
+		FLASH_VARS_PAGE_2_SEC_NUM,
+#if (FLASH_VARS_PAGES_COUNT > 3)
+		FLASH_VARS_PAGE_3_SEC_NUM,
+#if (FLASH_VARS_PAGES_COUNT > 4)
+		FLASH_VARS_PAGE_4_SEC_NUM,
+#endif
+#endif
 };
 
 static tStatRec pages_stat[FLASH_VARS_PAGES_COUNT] = {{0}};
@@ -142,9 +157,16 @@ static void state_write_check()
 
 		if ((page_sub_addr + size) > FLASH_VARS_PAGE_SIZE)
 		{
-			state_func = state_newpage;
-			flash_vars_index = 0;
-			page_sub_addr = 0;
+			uint32_t new_page = (page_index + 1) % FLASH_VARS_PAGES_COUNT;
+			if (flash_module_erase(pages_sectors_tbl[new_page]) == FLASH_SUCCESS)
+			{
+				state_func = state_newpage;
+				flash_vars_index = 0;
+				page_sub_addr = 0;
+				log("state_write_check: erase page #%i OK\r\n", new_page);
+			}
+			else
+				log("state_write_check: erase page #%i busy\r\n", new_page);
 			return;
 		}
 
@@ -194,15 +216,14 @@ static void state_newpage()
 	{
 		if (flash_module_erase(pages_sectors_tbl[page_index]) == FLASH_SUCCESS)
 		{
-			log("state_newpage(%2i, %04X): erase OK\r\n", page_index, page_sub_addr);
+			log("state_newpage(page = %2i, addr=%04X): erase OK\r\n", page_index, page_sub_addr);
 			page_index = (page_index + 1) % FLASH_VARS_PAGES_COUNT;
 			flash_vars_index = 0;
 			state_func = state_write_check;
 			log("\r\n");
-			return;
 		}
 		else
-			log("state_newpage(%2i, %04X): erase busy\r\n", page_index, page_sub_addr);
+			log("state_newpage(page = %2i, addr=%04X): erase busy\r\n", page_index, page_sub_addr);
 		return;
 	}
 
@@ -287,7 +308,7 @@ static void stat_process()
 	uint8_t last_full_good = NON_FOUND;
 	uint8_t first_full_good = NON_FOUND;
 
-	log("\t\tClear\tGood\tBad\r\n");
+	log_init("\t\tClear\tGood\tBad\r\n");
 	for (uint32_t index = 0; index < FLASH_VARS_PAGES_COUNT; index++)
 	{
 		uint32_t bad = pages_stat[index].bad_cnt;
@@ -315,19 +336,19 @@ static void stat_process()
 			pages_part_good++;
 		}
 
-		log("Stat page #%i:\t%i\t%i\t%i\r\n", index, clean, good, bad);
+		log_init("Stat page #%i:\t%i\t%i\t%i\r\n", index, clean, good, bad);
 	}
-	log("\r\n");
+	log_init("\r\n");
 
-	log("pages_full_good\t%i\r\n", pages_full_good);
-	log("pages_part_good\t%i\r\n", pages_part_good);
-	log("pages_clean    \t%i\r\n", pages_clean);
-	log("pages_errors   \t%i\r\n", pages_errors);
-	log("\r\n");
-	log("part_good_pos  \t%i\r\n", part_good_pos);
-	log("last_full_good \t%i\r\n", last_full_good);
-	log("first_full_good\t%i\r\n", first_full_good);
-	log("\r\n");
+	log_init("pages_full_good\t%i\r\n", pages_full_good);
+	log_init("pages_part_good\t%i\r\n", pages_part_good);
+	log_init("pages_clean    \t%i\r\n", pages_clean);
+	log_init("pages_errors   \t%i\r\n", pages_errors);
+	log_init("\r\n");
+	log_init("part_good_pos  \t%i\r\n", part_good_pos);
+	log_init("last_full_good \t%i\r\n", last_full_good);
+	log_init("first_full_good\t%i\r\n", first_full_good);
+	log_init("\r\n");
 
 	if (
 		((pages_full_good == 0) && (pages_part_good == 0)) ||
@@ -343,7 +364,7 @@ static void stat_process()
 	   )
 	{
 		init_process_error();
-		log("Flash_var_init: ERROR\r\n");
+		log_init("Flash_var_init: ERROR\r\n");
 		return;
 	}
 
@@ -354,18 +375,18 @@ static void stat_process()
 			if (pages_full_good == 0)
 			{
 				init_process_error();
-				log("Flash_var_init: ERROR: partitaly page not complite\r\n");
+				log_init("Flash_var_init: ERROR: partitaly page not complite\r\n");
 			}
 			else
 			{
 				init_restore_from(first_full_good);
-				log("Flash_var_init_A: done and ok, restore variables from full page #%i\r\n", first_full_good);
+				log_init("Flash_var_init_A: done and ok, restore variables from full page #%i\r\n", first_full_good);
 			}
 		}
 		else
 		{
 			init_restore_from(part_good_pos);
-			log("Flash_var_init_A: done and ok, restore variables from part_page #%i\r\n", part_good_pos);
+			log_init("Flash_var_init_A: done and ok, restore variables from part_page #%i\r\n", part_good_pos);
 		}
 		return;
 	}
@@ -373,7 +394,7 @@ static void stat_process()
 	if (pages_full_good == 1)
 	{
 		init_restore_from(first_full_good);
-		log("Flash_var_init_B: done and ok, restore variables from single full page #%i\r\n", first_full_good);
+		log_init("Flash_var_init_B: done and ok, restore variables from single full page #%i\r\n", first_full_good);
 		return;
 	}
 
@@ -382,12 +403,12 @@ static void stat_process()
 		if (last_full_good == (FLASH_VARS_PAGES_COUNT - 1))
 		{
 			init_restore_from(first_full_good);
-			log("Flash_var_init_C: done and ok, restore variables from multi full page #%i\r\n", first_full_good);
+			log_init("Flash_var_init_C: done and ok, restore variables from multi full page #%i\r\n", first_full_good);
 		}
 		else
 		{
 			init_restore_from(last_full_good);
-			log("Flash_var_init_C: done and ok, restore variables from multi full page #%i\r\n", last_full_good);
+			log_init("Flash_var_init_C: done and ok, restore variables from multi full page #%i\r\n", last_full_good);
 		}
 		return;
 	}
@@ -440,46 +461,30 @@ static void state_read_stat()
 	if (flash_module_read(addr, data, size, read_stat_callback) == FLASH_SUCCESS)
 	{
 		state_func = state_none;
-		log("state_read_stat(%2i, %04X): write and verify OK    ", page_index, addr);
+		log("state_read_stat(%2i, %04X): read OK    ", page_index, addr);
 	}
 	else
-		log("state_read_stat(%2i, %04X): verify busy\r\n", page_index, addr);
+		log("state_read_stat(%2i, %04X): read busy\r\n", page_index, addr);
 }
 
 static void read_restore_callback(uint8_t *data, UNUSED uint16_t size)
 {
+	state_func = state_read_restore;
+
 	const tRecord *rec = (tRecord *)data;
 	if (record_check_unprogrammed(rec))
 	{
 		log("read_restore_callback: VOID\r\n");
-		for (uint32_t index = 0; index < FLASH_VARS_COUNT; index++)
-			if (flash_vars[index] != flash_vars_shadow[index])
-			{
-				init_error = true;
-				break;
-			}
-
-		if (init_error)
-			log("Flash_vars_init_DONE ERROR\r\n")
-		else
-			log("Flash_vars_init_DONE all OK\r\n");
-		log("\r\n");
-
-		if (need_renew_page)
-		{
-			need_renew_page = false;
-			page_index = (page_index + FLASH_VARS_PAGES_COUNT - 1) % FLASH_VARS_PAGES_COUNT; //cyclic page_index decrase
-			flash_vars_index = 0;
-			page_sub_addr = 0;
-			state_func = state_newpage;
-		}
-		else
-			state_func = state_write_check;
 		init_done = true;
 		return;
 	}
 
 	page_sub_addr += size;
+	if (page_sub_addr >= FLASH_VARS_PAGE_SIZE)
+	{
+		init_done = true;
+		need_renew_page = true;
+	}
 
 	if (record_check(rec))
 	{
@@ -489,28 +494,53 @@ static void read_restore_callback(uint8_t *data, UNUSED uint16_t size)
 	}
 	else
 		log("read_restore_callback(%2i): ERROR\r\n", rec->addr);
-
-	state_func = state_read_restore;
 }
 
 static void state_read_restore()
 {
+	if (init_done)
+	{
+		for (uint32_t index = 0; index < FLASH_VARS_COUNT; index++)
+			if (flash_vars[index] != flash_vars_shadow[index])
+			{
+				init_error = true;
+				break;
+			}
+
+		if (init_error)
+			log_init("Flash_vars_init_DONE ERROR\r\n")
+		else
+			log_init("Flash_vars_init_DONE all OK\r\n");
+		log("\r\n");
+
+		if (need_renew_page)
+		{
+			uint32_t new_page = (page_index + 1) % FLASH_VARS_PAGES_COUNT;
+			if (flash_module_erase(pages_sectors_tbl[new_page]) == FLASH_SUCCESS)
+			{
+				log("state_read_restore: after done erase page #%i OK\r\n", new_page);
+				need_renew_page = false;
+				flash_vars_index = 0;
+				page_sub_addr = 0;
+				state_func = state_newpage;
+			}
+			else
+				log("state_read_restore: after done erase page #%i Busy\r\n", new_page);
+			return;
+		}
+		else
+			state_func = state_write_check;
+		return;
+	}
+
 	uint32_t addr = pages_addr_tbl[page_index] + page_sub_addr;
 	uint8_t *data = (uint8_t *)&record_buf;
 	uint16_t size = sizeof(record_buf);
 
-	if ((page_sub_addr + size) > FLASH_VARS_PAGE_SIZE)
-	{
-		page_sub_addr = 0;
-		page_index = (page_index + 1) % FLASH_VARS_PAGES_COUNT;
-		need_renew_page = true;
-		return;
-	}
-
 	if (flash_module_read(addr, data, size, read_restore_callback) == FLASH_SUCCESS)
 	{
 		state_func = state_none;
-		log("state_read_restore(%2i, %04X): write and verify OK    ", page_index, addr);
+		log("state_read_restore(%2i, %04X): read OK    ", page_index, addr);
 	}
 	else
 		log("state_read_restore(%2i, %04X): verify busy\r\n", page_index, addr);

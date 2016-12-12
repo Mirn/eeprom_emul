@@ -16,12 +16,12 @@ void second_tick()
 	state = (state + 7) % FLASH_VARS_COUNT;
 	flash_vars[state]++;
 
-	printf("\r\n");
+	//printf("\r\n");
 	//printf("tick\t");
 	for (uint32_t pos = 0; pos < FLASH_VARS_COUNT; pos++)
 		printf("%i\t", flash_vars[pos]);
 	printf("\r\n");
-	printf("\r\n");
+	//printf("\r\n");
 }
 
 void main(void)
@@ -51,11 +51,11 @@ void main(void)
 
 	//delay_ms(1000);
 
-	if (flash_vars_read_init_error())
-		for (uint32_t pos = 0; pos < FLASH_VARS_COUNT; pos++)
-			flash_vars[pos] = pos;
+//	if (flash_vars_read_init_error())
+//		for (uint32_t pos = 0; pos < FLASH_VARS_COUNT; pos++)
+//			flash_vars[pos] = pos;
 
-	systick_on(1, second_tick);
+	systick_on(100, second_tick);
 
 	while (true)
 	{
