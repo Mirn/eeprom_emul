@@ -15,6 +15,13 @@ void second_tick()
 	flash_vars[state]++;
 	state = (state + 7) % FLASH_VARS_COUNT;
 	flash_vars[state]++;
+
+	printf("\r\n");
+	//printf("tick\t");
+	for (uint32_t pos = 0; pos < FLASH_VARS_COUNT; pos++)
+		printf("%i\t", flash_vars[pos]);
+	printf("\r\n");
+	printf("\r\n");
 }
 
 void main(void)
@@ -32,12 +39,21 @@ void main(void)
 	delay_ms(10);
 
 	flash_module_init();
-	flash_vars_init(true);
+	flash_vars_init(false);
 
-	mem_tst();
+	//mem_tst();
 
-	for (uint32_t pos = 0; pos < FLASH_VARS_COUNT; pos++)
-		flash_vars[pos] = pos;
+	while (!flash_vars_read_init_done())
+	{
+		flash_module_proc();
+		flash_vars_proc();
+	}
+
+	//delay_ms(1000);
+
+	if (flash_vars_read_init_error())
+		for (uint32_t pos = 0; pos < FLASH_VARS_COUNT; pos++)
+			flash_vars[pos] = pos;
 
 	systick_on(1, second_tick);
 
