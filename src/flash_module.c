@@ -21,8 +21,8 @@
 //#define log(...) {}
 #define log(...) printf(__VA_ARGS__)
 
-//#define log_task(...) {}
-#define log_task(...) printf(__VA_ARGS__)
+#define log_task(...) {}
+//#define log_task(...) printf(__VA_ARGS__)
 
 typedef struct Flash_operation {
 	uint8_t *data;

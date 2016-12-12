@@ -5,20 +5,24 @@
  *      Author: Евгений
  */
 
+#include <stdio.h>
+#include <stdint.h>
+#include <strings.h>
+
 #include "flash_module.h"
 #include "crc16_ccitt.h"
 #include "flash_vars.h"
-#include "stdio.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat"    //for custom printf implementation which not support -lu and etc formats
+#pragma GCC diagnostic error "-Wpadded"      //tStatRec and tRecord must be without padding!!
 #define UNUSED __attribute__((unused))
 #else
 #error "Unknow compiler"
 #endif
 
-#define log(...) {}
-//#define log(...) printf(__VA_ARGS__)
+//#define log(...) {}
+#define log(...) printf(__VA_ARGS__)
 
 typedef struct {
 	uint32_t value;
@@ -28,11 +32,16 @@ typedef struct {
 	uint8_t  crc_h;
 } tRecord;
 
+typedef struct {
+	uint16_t good_cnt;
+	uint16_t bad_cnt;
+} tStatRec;
+
 typedef void (*tState)();
 
-volatile uint32_t flash_vars[FLASH_VARS_COUNT];
-static   uint32_t flash_vars_shadow[FLASH_VARS_COUNT];
-static   uint32_t flash_vars_index;
+volatile uint32_t flash_vars[FLASH_VARS_COUNT] = {0};
+static   uint32_t flash_vars_shadow[FLASH_VARS_COUNT] = {0};
+static   uint32_t flash_vars_index = 0;
 
 static uint32_t page_sub_addr = 0;
 static uint32_t page_index = 0;
@@ -48,10 +57,12 @@ static const uint32_t pages_nums_tbl[FLASH_VARS_PAGES_COUNT] = {
 		FLASH_VARS_PAGE_2_SEC_NUM
 };
 
+static tStatRec pages_stat[FLASH_VARS_PAGES_COUNT] = {0};
+
 static bool init_done = false;
 static bool init_error = false;
 
-static tRecord record_buf;
+static tRecord record_buf = {0};
 
 static void state_none() {};
 static void state_write_check();
@@ -209,6 +220,14 @@ void state_newpage()
 
 void flash_vars_init(bool first_start)
 {
+	memset((void *)flash_vars, 0, sizeof(flash_vars));
+	memset(flash_vars_shadow, 0, sizeof(flash_vars_shadow));
+	memset(pages_stat, 0, sizeof(pages_stat));
+	flash_vars_index = 0;
+
+	page_sub_addr = 0;
+	page_index = 0;
+
 	if (first_start)
 	{
 		init_done = true;
