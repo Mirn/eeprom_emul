@@ -82,6 +82,7 @@ static bool init_error = false;
 static tRecord record_buf = {0};
 
 static void state_none() {};
+static void state_erase_all();
 static void state_write_check();
 static void state_newpage();
 static void state_read_stat();
@@ -120,6 +121,26 @@ static bool record_check(const tRecord *rec)
 	return crc_ok &&
 		   addr_ok &&
 		   range_ok;
+}
+
+static void state_erase_all()
+{
+	if (flash_module_erase(pages_sectors_tbl[page_index]) != FLASH_SUCCESS)
+	{
+		log("state_erase_all: page #%i busy\r\n", page_index);
+		return;
+	}
+
+	log("state_erase_all: page #%i ok\r\n", page_index);
+
+	page_index++;
+	if (page_index >= FLASH_VARS_PAGES_COUNT)
+	{
+		page_index = 0;
+		page_sub_addr = 0;
+		flash_vars_index = 0;
+		state_func = state_write_check;
+	}
 }
 
 static void write_verify_callback(uint8_t *data, UNUSED uint16_t size)
@@ -270,25 +291,24 @@ static void init_process_error()
 {
 	init_done = true;
 	init_error = true;
+
 	memset((void *)flash_vars, 0, sizeof(flash_vars));
 	memset(flash_vars_shadow, 0, sizeof(flash_vars_shadow));
 
 	page_index = 0;
 	page_sub_addr = 0;
 	flash_vars_index = 0;
-	state_func = state_write_check;
-
-	for (uint8_t index = 0; index < FLASH_VARS_PAGES_COUNT; index++)
-		flash_module_erase(pages_sectors_tbl[index]);
+	state_func = state_erase_all;
 }
 
 static void init_restore_from(uint8_t page_num)
 {
+	memset((void *)flash_vars, 0, sizeof(flash_vars));
+	memset(flash_vars_shadow, 0xFF, sizeof(flash_vars_shadow));
+
 	page_index = page_num;
 	page_sub_addr = 0;
 	flash_vars_index = 0;
-	memset((void *)flash_vars, 0, sizeof(flash_vars));
-	memset(flash_vars_shadow, 0xFF, sizeof(flash_vars_shadow));
 	state_func = state_read_restore;
 }
 
@@ -531,8 +551,8 @@ void flash_vars_init(bool first_start)
 	memset((void *)flash_vars, 0x00, sizeof(flash_vars));
 	memset(flash_vars_shadow, 0xFF, sizeof(flash_vars_shadow));
 	memset(pages_stat, 0, sizeof(pages_stat));
-	flash_vars_index = 0;
 
+	flash_vars_index = 0;
 	page_sub_addr = 0;
 	page_index = 0;
 
@@ -540,11 +560,7 @@ void flash_vars_init(bool first_start)
 	{
 		init_done = true;
 		init_error = false;
-
-		state_func = state_write_check;
-
-		for (uint8_t index = 0; index < FLASH_VARS_PAGES_COUNT; index++)
-			flash_module_erase(pages_sectors_tbl[index]);
+		state_func = state_erase_all;
 	}
 	else
 	{

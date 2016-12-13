@@ -42,7 +42,7 @@ void main(void)
 	delay_ms(10);
 
 	flash_module_init();
-	flash_vars_init(false);
+	flash_vars_init(true);
 
 	//mem_tst();
 
@@ -52,11 +52,9 @@ void main(void)
 		flash_vars_proc();
 	}
 
-	//delay_ms(1000);
-
-//	if (flash_vars_read_init_error())
-//		for (uint32_t pos = 0; pos < FLASH_VARS_COUNT; pos++)
-//			flash_vars[pos] = pos;
+	if (flash_vars_read_init_error())
+		for (uint32_t pos = 0; pos < FLASH_VARS_COUNT; pos++)
+			flash_vars[pos] = pos;
 
 	systick_on(1, second_tick);
 
@@ -65,20 +63,16 @@ void main(void)
 	{
 		flash_module_proc();
 
-		//flash_vars[0]++;
+		flash_vars[0]++;
 		divider++;
 		if (divider > 100000)
 		{
 			divider = 0;
-			//flash_vars[1]++;
-		}
-
-		if (divider == 100000)
-		{
-			static uint8_t buf;
-			while (flash_module_read(0, &buf, 1, NULL) == FLASH_SUCCESS)
-				printf("flash_module_read!\r\n");
-			flash_vars[0]++;
+			flash_vars[1]++;
+//			static uint8_t buf;
+//			while (flash_module_read(0, &buf, 1, NULL) == FLASH_SUCCESS)
+//				printf("flash_module_read!\r\n");
+//			flash_vars[0]++;
 		}
 
 		flash_vars_proc();
