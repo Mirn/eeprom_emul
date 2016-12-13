@@ -9,12 +9,15 @@
 void second_tick()
 {
 	static uint32_t state = 0;
-	state = (state + 7) % FLASH_VARS_COUNT;
-	flash_vars[state]++;
-	state = (state + 7) % FLASH_VARS_COUNT;
-	flash_vars[state]++;
-	state = (state + 7) % FLASH_VARS_COUNT;
-	flash_vars[state]++;
+
+	state = (state + 7) % (FLASH_VARS_COUNT - 2);
+	flash_vars[2 + state]++;
+
+	state = (state + 7) % (FLASH_VARS_COUNT - 2);
+	flash_vars[2 + state]++;
+
+	state = (state + 7) % (FLASH_VARS_COUNT - 2);
+	flash_vars[2 + state]++;
 
 	//printf("\r\n");
 	//printf("tick\t");
@@ -57,8 +60,17 @@ void main(void)
 
 	systick_on(100, second_tick);
 
+	uint32_t divider = 0;
 	while (true)
 	{
+		flash_vars[0]++;
+		divider++;
+		if (divider > 10000)
+		{
+			divider = 0;
+			flash_vars[1]++;
+		}
+
 		flash_module_proc();
 		flash_vars_proc();
 	}

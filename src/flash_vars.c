@@ -49,7 +49,7 @@ static   uint32_t flash_vars_shadow[FLASH_VARS_COUNT] = {0};
 static   uint32_t flash_vars_index = 0;
 
 static uint32_t page_sub_addr = 0;
-static uint32_t page_index = 0;
+static uint8_t  page_index = 0;
 
 static const uint32_t pages_addr_tbl[FLASH_VARS_PAGES_COUNT] = {
 		FLASH_VARS_PAGE_0_ADDR,
@@ -278,7 +278,7 @@ static void init_process_error()
 	flash_vars_index = 0;
 	state_func = state_write_check;
 
-	for (uint32_t index = 0; index < FLASH_VARS_PAGES_COUNT; index++)
+	for (uint8_t index = 0; index < FLASH_VARS_PAGES_COUNT; index++)
 		flash_module_erase(pages_sectors_tbl[index]);
 }
 
@@ -306,7 +306,7 @@ static void stat_process()
 	uint8_t first_full_good = NON_FOUND;
 
 	log_init("\t\tClear\tGood\tBad\r\n");
-	for (uint32_t index = 0; index < FLASH_VARS_PAGES_COUNT; index++)
+	for (uint8_t index = 0; index < FLASH_VARS_PAGES_COUNT; index++)
 	{
 		uint32_t bad = pages_stat[index].bad_cnt;
 		uint32_t good = pages_stat[index].good_cnt;
@@ -496,7 +496,7 @@ static void state_read_restore()
 {
 	if (init_done)
 	{
-		for (uint32_t index = 0; index < FLASH_VARS_COUNT; index++)
+		for (uint16_t index = 0; index < FLASH_VARS_COUNT; index++)
 			if (flash_vars[index] != flash_vars_shadow[index])
 			{
 				init_error = true;
@@ -543,7 +543,7 @@ void flash_vars_init(bool first_start)
 
 		state_func = state_write_check;
 
-		for (uint32_t index = 0; index < FLASH_VARS_PAGES_COUNT; index++)
+		for (uint8_t index = 0; index < FLASH_VARS_PAGES_COUNT; index++)
 			flash_module_erase(pages_sectors_tbl[index]);
 	}
 	else

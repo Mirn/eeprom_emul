@@ -34,7 +34,7 @@
 #define FLASH_VARS_PAGE_3_SEC_NUM 6
 #define FLASH_VARS_PAGE_4_SEC_NUM 7
 
-#define FLASH_VARS_PAGE_SIZE 256
+#define FLASH_VARS_PAGE_SIZE 4096
 #if ((FLASH_VARS_PAGE_SIZE % 8) != 0)
 #error "FLASH_VARS_PAGE_SIZE It must be a multiple of 8"
 #endif
