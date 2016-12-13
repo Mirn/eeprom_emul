@@ -79,8 +79,6 @@ static tStatRec pages_stat[FLASH_VARS_PAGES_COUNT] = {{0}};
 static bool init_done = false;
 static bool init_error = false;
 
-static bool need_renew_page = false;
-
 static tRecord record_buf = {0};
 
 static void state_none() {};
@@ -289,7 +287,6 @@ static void init_restore_from(uint8_t page_num)
 	page_index = page_num;
 	page_sub_addr = 0;
 	flash_vars_index = 0;
-	need_renew_page = false;
 	memset((void *)flash_vars, 0, sizeof(flash_vars));
 	memset(flash_vars_shadow, 0xFF, sizeof(flash_vars_shadow));
 	state_func = state_read_restore;
@@ -483,7 +480,6 @@ static void read_restore_callback(uint8_t *data, UNUSED uint16_t size)
 	if (page_sub_addr >= FLASH_VARS_PAGE_SIZE)
 	{
 		init_done = true;
-		need_renew_page = true;
 	}
 
 	if (record_check(rec))
@@ -513,23 +509,7 @@ static void state_read_restore()
 			log_init("Flash_vars_init_DONE all OK\r\n");
 		log("\r\n");
 
-		if (need_renew_page)
-		{
-			uint32_t new_page = (page_index + 1) % FLASH_VARS_PAGES_COUNT;
-			if (flash_module_erase(pages_sectors_tbl[new_page]) == FLASH_SUCCESS)
-			{
-				log("state_read_restore: after done erase page #%i OK\r\n", new_page);
-				need_renew_page = false;
-				flash_vars_index = 0;
-				page_sub_addr = 0;
-				state_func = state_newpage;
-			}
-			else
-				log("state_read_restore: after done erase page #%i Busy\r\n", new_page);
-			return;
-		}
-		else
-			state_func = state_write_check;
+		state_func = state_write_check;
 		return;
 	}
 
