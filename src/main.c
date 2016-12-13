@@ -58,20 +58,29 @@ void main(void)
 //		for (uint32_t pos = 0; pos < FLASH_VARS_COUNT; pos++)
 //			flash_vars[pos] = pos;
 
-	systick_on(100, second_tick);
+	systick_on(1, second_tick);
 
 	uint32_t divider = 0;
 	while (true)
 	{
-		flash_vars[0]++;
+		flash_module_proc();
+
+		//flash_vars[0]++;
 		divider++;
-		if (divider > 10000)
+		if (divider > 100000)
 		{
 			divider = 0;
-			flash_vars[1]++;
+			//flash_vars[1]++;
 		}
 
-		flash_module_proc();
+		if (divider == 100000)
+		{
+			static uint8_t buf;
+			while (flash_module_read(0, &buf, 1, NULL) == FLASH_SUCCESS)
+				printf("flash_module_read!\r\n");
+			flash_vars[0]++;
+		}
+
 		flash_vars_proc();
 	}
 }

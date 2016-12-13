@@ -82,7 +82,7 @@ static bool task_queue_add(
 
 static bool task_queue_extract(tFlash_operation *op)
 {
-	if (task_queue_count() >= QUEUE_LENGTH)
+	if (task_queue_count() <= 0)
 		return false;
 
 	uint32_t index = task_queue_rd % QUEUE_LENGTH;
@@ -266,7 +266,7 @@ int flash_module_write(uint32_t addr, uint8_t *data, uint16_t size)
 	if (size == 0)
 		return FLASH_ERR_INV_PARAMS;
 
-	if (task_queue_free() < 2)
+	if (task_queue_free() < 3) //two operations but need at least 3 free slots for write and verify sequence
 		return FLASH_ERR_BUSY;
 
 	task_queue_add(worker_write, addr, data, size, 0);

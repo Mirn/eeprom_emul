@@ -21,8 +21,8 @@
 #error "Unknow compiler"
 #endif
 
-#define log(...) {}
-//#define log(...) printf(__VA_ARGS__);
+//#define log(...) {}
+#define log(...) printf(__VA_ARGS__);
 
 //#define log_init(...) {}
 #define log_init(...) printf(__VA_ARGS__);
