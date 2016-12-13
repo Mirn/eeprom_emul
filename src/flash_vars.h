@@ -13,8 +13,8 @@
 #include <stdbool.h>
 
 #define FLASH_VARS_COUNT 20
-#if (FLASH_VARS_COUNT > 32)
-#error "FLASH_VARS_COUNT must be less than 32"
+#if (FLASH_VARS_COUNT > 255)
+#error "FLASH_VARS_COUNT must be less than 255"
 #endif
 
 #define FLASH_VARS_PAGES_COUNT 3
@@ -39,6 +39,7 @@
 #error "FLASH_VARS_PAGE_SIZE It must be a multiple of 8"
 #endif
 
+//WARNING! flash_vars not valid until flash_vars_read_init_done return true
 extern volatile uint32_t flash_vars[FLASH_VARS_COUNT];
 
 void flash_vars_init(bool first_start);

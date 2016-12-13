@@ -42,7 +42,7 @@ void main(void)
 	delay_ms(10);
 
 	flash_module_init();
-	flash_vars_init(true);
+	flash_vars_init(false);
 
 	//mem_tst();
 
